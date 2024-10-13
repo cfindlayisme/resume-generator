@@ -71,14 +71,11 @@ Summary: %s
 Skills: %v
 Experience: %v
 
-The below is an example JSON file format for the resume. Please respond in this format:
-%s
-
 Based on the following job description, generate a tailored resume emphasizing relevant skills and experiences. Feel free to remove or rephrase any information as needed.
 
 Job Description:
 %s
-`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, gptResponseFormat, jobDescription)
+`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, jobDescription)
 
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
@@ -88,6 +85,10 @@ Job Description:
 				{
 					Role:    "system",
 					Content: "You are a helpful assistant that rewrites resumes to match job descriptions.",
+				},
+				{
+					Role:    "system",
+					Content: "Respond in this format: " + gptResponseFormat,
 				},
 				{
 					Role:    "user",
