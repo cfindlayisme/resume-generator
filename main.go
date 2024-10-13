@@ -132,6 +132,12 @@ func main() {
 	}
 
 	// Output the tailored resume
+	var tailoredResumeObj Resume
+	err = json.Unmarshal([]byte(tailoredResume), &tailoredResumeObj)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal tailored resume JSON: %v", err)
+	}
+
 	fmt.Println("Tailored Resume:")
-	fmt.Println(tailoredResume)
+	fmt.Printf("%+v\n", tailoredResumeObj)
 }
