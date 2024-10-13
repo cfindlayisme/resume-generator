@@ -85,5 +85,9 @@ func main() {
 	}
 
 	fmt.Println("Tailored response:")
-	fmt.Printf("%+v\n", response)
+	prettyResponse, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		log.Fatalf("Failed to marshal tailored response: %v", err)
+	}
+	fmt.Println(string(prettyResponse))
 }
