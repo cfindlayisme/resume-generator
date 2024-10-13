@@ -7,12 +7,12 @@ GOGET = $(GOCMD) get
 
 # Build target
 build:
-	$(GOBUILD) -o wmb
+	$(GOBUILD) -o resume-generator
 
 # Clean target
 clean:
 	$(GOCLEAN)
-	rm -f wmb
+	rm -f resume-generator
 
 # Test target
 test:
