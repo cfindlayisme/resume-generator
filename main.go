@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	_ "embed"
 
@@ -17,6 +18,12 @@ import (
 //go:embed example-format.json
 var gptResponseFormat string
 
+type TailoredResponse struct {
+	TailoredResume      Resume      `json:"tailoredResume"`
+	GeneratedTime       time.Time   `json:"generatedTime"`
+	TailoredCoverLetter CoverLetter `json:"tailoredCoverLetter"`
+}
+
 // Resume struct to match resume.json structure
 type Resume struct {
 	Name       string       `json:"name"`
@@ -24,6 +31,10 @@ type Resume struct {
 	Summary    string       `json:"summary"`
 	Skills     []string     `json:"skills"`
 	Experience []Experience `json:"experience"`
+}
+
+type CoverLetter struct {
+	Content string `json:"content"`
 }
 
 type Experience struct {
@@ -104,6 +115,47 @@ Job Description:
 
 	return resp.Choices[0].Message.Content, nil
 }
+func generateTailoredCoverLetter(apiKey, jobDescription string, resume *Resume) (string, error) {
+	client := openai.NewClient(apiKey)
+
+	// Build the prompt to send to ChatGPT
+	prompt := fmt.Sprintf(`Here's a resume:
+
+Name: %s
+Email: %s
+Summary: %s
+Skills: %v
+Experience: %v
+
+Based on the following job description, generate a tailored cover letter emphasizing relevant skills and experiences.
+
+Job Description:
+%s
+`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, jobDescription)
+
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT4oMini,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    "system",
+					Content: "You are a helpful assistant that writes cover letters to match job descriptions.",
+				},
+				{
+					Role:    "user",
+					Content: prompt,
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("ChatGPT request failed: %v", err)
+	}
+
+	return resp.Choices[0].Message.Content, nil
+}
 
 func main() {
 
@@ -138,6 +190,18 @@ func main() {
 		log.Fatalf("Failed to unmarshal tailored resume JSON: %v", err)
 	}
 
-	fmt.Println("Tailored Resume:")
-	fmt.Printf("%+v\n", tailoredResumeObj)
+	// Generate the tailored cover letter using the OpenAI API
+	tailoredCoverLetter, err := generateTailoredCoverLetter(apiKey, jobDescription, &tailoredResumeObj)
+	if err != nil {
+		log.Fatalf("Failed to generate tailored cover letter: %v", err)
+	}
+
+	response := TailoredResponse{
+		TailoredResume:      tailoredResumeObj,
+		GeneratedTime:       time.Now(),
+		TailoredCoverLetter: CoverLetter{Content: tailoredCoverLetter},
+	}
+
+	fmt.Println("Tailored response:")
+	fmt.Printf("%+v\n", response)
 }
