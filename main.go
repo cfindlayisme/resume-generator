@@ -134,6 +134,6 @@ func main() {
 	}
 
 	// Output the tailored resume
-	fmt.Println("Tailored Resume:\n")
+	fmt.Println("Tailored Resume:")
 	fmt.Println(tailoredResume)
 }
