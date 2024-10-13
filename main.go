@@ -2,19 +2,17 @@ package main
 
 import (
 	"context"
-	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
+	_ "embed"
+
 	"github.com/cfindlayisme/resume-generator/env"
 	"github.com/sashabaranov/go-openai"
 )
-
-//go:embed resume.json
-var content embed.FS
 
 //go:embed example-format.json
 var gptResponseFormat string
@@ -35,9 +33,8 @@ type Experience struct {
 	Details  []string `json:"details"`
 }
 
-// Load the resume from the embedded JSON file
 func loadResume() (*Resume, error) {
-	data, err := content.ReadFile("resume.json")
+	data, err := os.ReadFile("resume.json") // Reading from file system
 	if err != nil {
 		return nil, fmt.Errorf("failed to read resume.json: %v", err)
 	}
@@ -115,7 +112,7 @@ func main() {
 	}
 	apiKey := env.GetOpenAIKey()
 
-	// Load the resume data from the embedded JSON file
+	// Load the resume data from the filesystem
 	resume, err := loadResume()
 	if err != nil {
 		log.Fatalf("Failed to load resume: %v", err)
