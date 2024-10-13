@@ -1,0 +1,32 @@
+{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "summary": "Software developer with experience in backend development, microservices, and cloud infrastructure.",
+    "skills": [
+      "Golang",
+      "Docker",
+      "Kubernetes",
+      "REST APIs"
+    ],
+    "experience": [
+      {
+        "company": "Tech Solutions Inc.",
+        "role": "Backend Developer",
+        "duration": "Jan 2022 - Present",
+        "details": [
+          "Developed and maintained backend microservices.",
+          "Implemented REST APIs for high-traffic applications."
+        ]
+      },
+      {
+        "company": "Cloud Innovations",
+        "role": "Software Engineer",
+        "duration": "Jun 2020 - Dec 2021",
+        "details": [
+          "Worked on cloud-based solutions using Kubernetes and Docker.",
+          "Enhanced system performance and scalability."
+        ]
+      }
+    ]
+  }
+  

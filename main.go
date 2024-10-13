@@ -1,15 +1,24 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
+
+	"github.com/sashabaranov/go-openai"
 )
 
-//go:embed resume.json
-var resumeFile embed.FS
+//go:embed resume.json jobdescription.txt
+var content embed.FS
 
+//go:embed example-format.json
+var gptResponseFormat string
+
+// Resume struct to match resume.json structure
 type Resume struct {
 	Name       string       `json:"name"`
 	Email      string       `json:"email"`
@@ -25,31 +34,104 @@ type Experience struct {
 	Details  []string `json:"details"`
 }
 
-func main() {
-	data, err := resumeFile.ReadFile("resume.json")
+// Load the resume from the embedded JSON file
+func loadResume() (*Resume, error) {
+	data, err := content.ReadFile("resume.json")
 	if err != nil {
-		log.Fatalf("Failed to read resume.json: %v", err)
+		return nil, fmt.Errorf("failed to read resume.json: %v", err)
 	}
 
 	var resume Resume
 	err = json.Unmarshal(data, &resume)
 	if err != nil {
-		log.Fatalf("Failed to unmarshal JSON: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal resume JSON: %v", err)
 	}
 
-	fmt.Printf("Resume of %s:\n", resume.Name)
-	fmt.Printf("Email: %s\n", resume.Email)
-	fmt.Printf("Summary: %s\n", resume.Summary)
-	fmt.Println("Skills:")
-	for _, skill := range resume.Skills {
-		fmt.Printf(" - %s\n", skill)
+	return &resume, nil
+}
+
+// Load the job description from the embedded text file
+func loadJobDescription() (string, error) {
+	data, err := content.ReadFile("jobdescription.txt")
+	if err != nil {
+		return "", fmt.Errorf("failed to read jobdescription.txt: %v", err)
 	}
 
-	fmt.Println("Experience:")
-	for _, exp := range resume.Experience {
-		fmt.Printf("Company: %s, Role: %s (%s)\n", exp.Company, exp.Role, exp.Duration)
-		for _, detail := range exp.Details {
-			fmt.Printf("  - %s\n", detail)
-		}
+	// Convert the content to a string and remove any extra whitespace
+	return strings.TrimSpace(string(data)), nil
+}
+
+func generateTailoredResume(apiKey, jobDescription string, resume *Resume) (string, error) {
+	client := openai.NewClient(apiKey)
+
+	// Build the prompt to send to ChatGPT
+	prompt := fmt.Sprintf(`Here's a resume:
+
+Name: %s
+Email: %s
+Summary: %s
+Skills: %v
+Experience: %v
+
+The below is an example JSON file format for the resume. Please respond in this format:
+%s
+
+Based on the following job description, generate a tailored resume emphasizing relevant skills and experiences. Feel free to remove or rephrase any information as needed.
+
+Job Description:
+%s
+`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, jobDescription, gptResponseFormat)
+
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    "system",
+					Content: "You are a helpful assistant that rewrites resumes to match job descriptions.",
+				},
+				{
+					Role:    "user",
+					Content: prompt,
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("ChatGPT request failed: %v", err)
 	}
+
+	return resp.Choices[0].Message.Content, nil
+}
+
+func main() {
+	// Get the OpenAI API key from the environment variable
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		log.Fatal("OPENAI_API_KEY environment variable is not set")
+	}
+
+	// Load the resume data from the embedded JSON file
+	resume, err := loadResume()
+	if err != nil {
+		log.Fatalf("Failed to load resume: %v", err)
+	}
+
+	// Load the job description from the embedded text file
+	jobDescription, err := loadJobDescription()
+	if err != nil {
+		log.Fatalf("Failed to load job description: %v", err)
+	}
+
+	// Generate the tailored resume using the OpenAI API
+	tailoredResume, err := generateTailoredResume(apiKey, jobDescription, resume)
+	if err != nil {
+		log.Fatalf("Failed to generate tailored resume: %v", err)
+	}
+
+	// Output the tailored resume
+	fmt.Println("Tailored Resume:\n")
+	fmt.Println(tailoredResume)
 }
