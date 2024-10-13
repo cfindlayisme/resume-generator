@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/cfindlayisme/resume-generator/env"
 	"github.com/sashabaranov/go-openai"
 )
 
-//go:embed resume.json jobdescription.txt
+//go:embed resume.json
 var content embed.FS
 
 //go:embed example-format.json
@@ -50,9 +51,9 @@ func loadResume() (*Resume, error) {
 	return &resume, nil
 }
 
-// Load the job description from the embedded text file
+// Load the job description from the filesystem
 func loadJobDescription() (string, error) {
-	data, err := content.ReadFile("jobdescription.txt")
+	data, err := os.ReadFile("jobdescription.txt") // Reading from file system
 	if err != nil {
 		return "", fmt.Errorf("failed to read jobdescription.txt: %v", err)
 	}
@@ -80,7 +81,7 @@ Based on the following job description, generate a tailored resume emphasizing r
 
 Job Description:
 %s
-`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, jobDescription, gptResponseFormat)
+`, resume.Name, resume.Email, resume.Summary, resume.Skills, resume.Experience, gptResponseFormat, jobDescription)
 
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
@@ -120,7 +121,7 @@ func main() {
 		log.Fatalf("Failed to load resume: %v", err)
 	}
 
-	// Load the job description from the embedded text file
+	// Load the job description from the filesystem
 	jobDescription, err := loadJobDescription()
 	if err != nil {
 		log.Fatalf("Failed to load job description: %v", err)
