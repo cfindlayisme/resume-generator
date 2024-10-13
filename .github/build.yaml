@@ -1,0 +1,81 @@
+name: Run unit tests & checks
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.21.3'
+    - name: Install dependencies for go
+      run: go mod download
+    - name: Unit Testing
+      run: go test -v ./...
+    - name: Generate coverage report
+      run: go test -coverprofile=coverage.out ./...
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.out
+    # - name: Notify IRC Success
+    #   run: |
+    #     export COMMIT_MSG=$(git log -1 --pretty=%B)
+    #     export MESSAGE="Unit tests for https://github.com/${{ github.repository }} completed successfully with commit message: $COMMIT_MSG. See https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    #     curl -X POST -H "Content-Type: application/json" -d "{\"message\": \"$MESSAGE\", \"password\": \"${{ secrets.WMB_PASSWORD }}\", \"colourcode\": 3}" https://convos.findlayis.me/wmb/message
+    #   if: success()
+    # - name: Notify IRC Failure
+    #   run: |
+    #     export COMMIT_MSG=$(git log -1 --pretty=%B)
+    #     export MESSAGE="Unit tests for https://github.com/${{ github.repository }} failed with commit message: $COMMIT_MSG. See https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    #     curl -X POST -H "Content-Type: application/json" -d "{\"message\": \"$MESSAGE\", \"password\": \"${{ secrets.WMB_PASSWORD }}\", \"colourcode\": 4}" https://convos.findlayis.me/wmb/message
+    #   if: failure()
+
+  # sonar:
+  #     needs: [unit-test]
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Download coverage report
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: coverage-report
+  #     - name: SonarCloud Scan
+  #       uses: sonarsource/sonarcloud-github-action@master
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # nancy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Set up Go
+  #     uses: actions/setup-go@v5
+  #     with:
+  #       go-version: 1.22.3
+  #   - name: Check for Go vulnerabilities
+  #     run: |
+  #       go list -json -m all | docker run --rm -i sonatypecommunity/nancy:latest sleuth
+  #   - name: Notify IRC Success
+  #     run: |
+  #       export COMMIT_MSG=$(git log -1 --pretty=%B)
+  #       export MESSAGE="Vulnerability scan for https://github.com/${{ github.repository }} completed successfully with commit message: $COMMIT_MSG. See https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #       curl -X POST -H "Content-Type: application/json" -d "{\"message\": \"$MESSAGE\", \"password\": \"${{ secrets.WMB_PASSWORD }}\", \"colourcode\": 3}" https://convos.findlayis.me/wmb/message
+  #     if: success()
+  #   - name: Notify IRC Failure
+  #     run: |
+  #       export COMMIT_MSG=$(git log -1 --pretty=%B)
+  #       export MESSAGE="Vulnerability scan for https://github.com/${{ github.repository }} failed with commit message: $COMMIT_MSG. See https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #       curl -X POST -H "Content-Type: application/json" -d "{\"message\": \"$MESSAGE\", \"password\": \"${{ secrets.WMB_PASSWORD }}\", \"colourcode\": 4}" https://convos.findlayis.me/wmb/message
+  #     if: failure()
