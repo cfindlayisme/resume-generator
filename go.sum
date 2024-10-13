@@ -1,2 +1,4 @@
+github.com/go-playground/assert v1.2.1 h1:ad06XqC+TOv0nJWnbULSlh3ehp5uLuQEojZY5Tq8RgI=
+github.com/go-playground/assert v1.2.1/go.mod h1:Lgy+k19nOB/wQG/fVSQ7rra5qYugmytMQqvQ2dgjWn8=
 github.com/sashabaranov/go-openai v1.32.0 h1:Yk3iE9moX3RBXxrof3OBtUBrE7qZR0zF9ebsoO4zVzI=
 github.com/sashabaranov/go-openai v1.32.0/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=

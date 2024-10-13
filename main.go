@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
+	"github.com/cfindlayisme/resume-generator/env"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -107,11 +107,12 @@ Job Description:
 }
 
 func main() {
-	// Get the OpenAI API key from the environment variable
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if apiKey == "" {
-		log.Fatal("OPENAI_API_KEY environment variable is not set")
+
+	err := env.Init()
+	if err != nil {
+		log.Fatalf("Failed to initialize environment: %v", err)
 	}
+	apiKey := env.GetOpenAIKey()
 
 	// Load the resume data from the embedded JSON file
 	resume, err := loadResume()
