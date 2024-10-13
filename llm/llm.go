@@ -69,7 +69,7 @@ Summary: %s
 Skills: %v
 Experience: %v
 
-Based on the following job description, generate a tailored cover letter emphasizing relevant skills and experiences.
+Based on the following job description, generate a tailored cover letter emphasizing relevant skills and experiences. Do not add information to replace - such as address, date, etc. I only want the Dear Hiring Manager, Introduction, Body, and Closing."
 
 Job Description:
 %s
