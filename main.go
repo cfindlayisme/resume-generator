@@ -12,45 +12,20 @@ import (
 	_ "embed"
 
 	"github.com/cfindlayisme/resume-generator/env"
+	"github.com/cfindlayisme/resume-generator/model"
 	"github.com/sashabaranov/go-openai"
 )
 
 //go:embed example-format.json
 var gptResponseFormat string
 
-type TailoredResponse struct {
-	TailoredResume      Resume      `json:"tailoredResume"`
-	GeneratedTime       time.Time   `json:"generatedTime"`
-	TailoredCoverLetter CoverLetter `json:"tailoredCoverLetter"`
-}
-
-// Resume struct to match resume.json structure
-type Resume struct {
-	Name       string       `json:"name"`
-	Email      string       `json:"email"`
-	Summary    string       `json:"summary"`
-	Skills     []string     `json:"skills"`
-	Experience []Experience `json:"experience"`
-}
-
-type CoverLetter struct {
-	Content string `json:"content"`
-}
-
-type Experience struct {
-	Company  string   `json:"company"`
-	Role     string   `json:"role"`
-	Duration string   `json:"duration"`
-	Details  []string `json:"details"`
-}
-
-func loadResume() (*Resume, error) {
+func loadResume() (*model.Resume, error) {
 	data, err := os.ReadFile("resume.json") // Reading from file system
 	if err != nil {
 		return nil, fmt.Errorf("failed to read resume.json: %v", err)
 	}
 
-	var resume Resume
+	var resume model.Resume
 	err = json.Unmarshal(data, &resume)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal resume JSON: %v", err)
@@ -70,7 +45,7 @@ func loadJobDescription() (string, error) {
 	return strings.TrimSpace(string(data)), nil
 }
 
-func generateTailoredResume(apiKey, jobDescription string, resume *Resume) (string, error) {
+func generateTailoredResume(apiKey, jobDescription string, resume *model.Resume) (string, error) {
 	client := openai.NewClient(apiKey)
 
 	// Build the prompt to send to ChatGPT
@@ -115,7 +90,7 @@ Job Description:
 
 	return resp.Choices[0].Message.Content, nil
 }
-func generateTailoredCoverLetter(apiKey, jobDescription string, resume *Resume) (string, error) {
+func generateTailoredCoverLetter(apiKey, jobDescription string, resume *model.Resume) (string, error) {
 	client := openai.NewClient(apiKey)
 
 	// Build the prompt to send to ChatGPT
@@ -184,7 +159,7 @@ func main() {
 	}
 
 	// Output the tailored resume
-	var tailoredResumeObj Resume
+	var tailoredResumeObj model.Resume
 	err = json.Unmarshal([]byte(tailoredResume), &tailoredResumeObj)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal tailored resume JSON: %v", err)
@@ -196,10 +171,10 @@ func main() {
 		log.Fatalf("Failed to generate tailored cover letter: %v", err)
 	}
 
-	response := TailoredResponse{
+	response := model.TailoredResponse{
 		TailoredResume:      tailoredResumeObj,
 		GeneratedTime:       time.Now(),
-		TailoredCoverLetter: CoverLetter{Content: tailoredCoverLetter},
+		TailoredCoverLetter: model.CoverLetter{Content: tailoredCoverLetter},
 	}
 
 	fmt.Println("Tailored response:")
